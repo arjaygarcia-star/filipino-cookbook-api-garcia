@@ -105,7 +105,7 @@ $app->group('/api', function ($group) {
         return jsonResponse($response, $foods);
     });
 
-    // 2. GET /api/foods/{id} — single food by ID
+    // 2. GET /api/foods/{id} — single food by ID (complete details)
     $group->get('/foods/{id}', function (Request $request, Response $response, $args) {
         $db = getDB();
         $id = $args['id'];
@@ -236,6 +236,90 @@ $app->group('/api', function ($group) {
             'status'  => 'success',
             'message' => 'Food added successfully.',
         ], 201);
+    });
+
+    // 7. GET /api/foods/{id}/ingredients — ingredients of a specific food
+    $group->get('/foods/{id}/ingredients', function (Request $request, Response $response, $args) {
+        $db = getDB();
+        $id = $args['id'];
+
+        $checkStmt = $db->prepare("SELECT food_id, food_name FROM foods WHERE food_id = ?");
+        $checkStmt->execute([$id]);
+        $food = $checkStmt->fetch();
+
+        if (!$food) {
+            return jsonResponse($response, [
+                'status'  => 'error',
+                'message' => 'Food not found',
+            ], 404);
+        }
+
+        $stmt = $db->prepare("
+            SELECT i.ingredient_id, i.ingredient_name
+            FROM food_ingredients fi
+            JOIN ingredients i ON fi.ingredient_id = i.ingredient_id
+            WHERE fi.food_id = ?
+            ORDER BY i.ingredient_name
+        ");
+        $stmt->execute([$id]);
+        $ingredients = $stmt->fetchAll();
+
+        return jsonResponse($response, [
+            'food_id'     => $food['food_id'],
+            'food_name'   => $food['food_name'],
+            'ingredients' => $ingredients,
+        ]);
+    });
+
+    // 8. GET /api/ingredients/{id}/foods — foods containing a particular ingredient
+    $group->get('/ingredients/{id}/foods', function (Request $request, Response $response, $args) {
+        $db = getDB();
+        $id = $args['id'];
+
+        $checkStmt = $db->prepare("SELECT ingredient_id, ingredient_name FROM ingredients WHERE ingredient_id = ?");
+        $checkStmt->execute([$id]);
+        $ingredient = $checkStmt->fetch();
+
+        if (!$ingredient) {
+            return jsonResponse($response, [
+                'status'  => 'error',
+                'message' => 'Ingredient not found',
+            ], 404);
+        }
+
+        $stmt = $db->prepare("
+            SELECT f.food_id, f.food_name, c.category_name, o.origin_name
+            FROM food_ingredients fi
+            JOIN foods f ON fi.food_id = f.food_id
+            JOIN categories c ON f.category_id = c.category_id
+            JOIN origins o ON f.origin_id = o.origin_id
+            WHERE fi.ingredient_id = ?
+            ORDER BY f.food_name
+        ");
+        $stmt->execute([$id]);
+        $foods = $stmt->fetchAll();
+
+        return jsonResponse($response, [
+            'ingredient_id'   => $ingredient['ingredient_id'],
+            'ingredient_name' => $ingredient['ingredient_name'],
+            'foods'           => $foods,
+        ]);
+    });
+
+    // 9. GET /api/categories/foods-count — number of foods under each category
+    $group->get('/categories/foods-count', function (Request $request, Response $response) {
+        $db = getDB();
+
+        $stmt = $db->query("
+            SELECT c.category_id, c.category_name, COUNT(f.food_id) AS food_count
+            FROM categories c
+            LEFT JOIN foods f ON f.category_id = c.category_id
+            GROUP BY c.category_id, c.category_name
+            ORDER BY c.category_name
+        ");
+        $counts = $stmt->fetchAll();
+
+        return jsonResponse($response, $counts);
     });
 
 })->add($tokenCheck);
