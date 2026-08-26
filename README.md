@@ -272,12 +272,26 @@ Status: **404 Not Found**
 
 ## Testing Evidence
 
-_(Add screenshots here of: a successful `/api/foods` request, a request without a token showing the 401 response, a `/api/foods/{id}` request for a non-existent ID showing 404, and the successful `POST /api/foods` request showing 201.)_
+All endpoints below were tested using Thunder Client.
+### Food Ingredients Lookup — `GET /api/foods/{id}/ingredients` (200)
+![Food Ingredients Lookup](screenshots/Food_Ingredients_Lookup.png)
+
+### Food Ingredients Lookup — invalid ID (404)
+![Food Ingredients Lookup Error](screenshots/Food_Ingredients__Lookup_error.png)
+
+### Foods by Ingredient — `GET /api/ingredients/{id}/foods` (200)
+![Foods by Ingredient](screenshots/Foods_by__Ingredient.png)
+
+### Foods by Ingredient — invalid ID (404)
+![Foods by Ingredient Error](screenshots/Foods_by_Ingredient_error.png)
+
+### Category Food Count — `GET /api/categories/foods-count` (200)
+![Category Food Count](screenshots/Category_Food_Count.png)
 
 ## Developer Information
 
 - **Name**: Arjay Garcia
-- **Course & Section**: _(BSIT-4B)_
+- **Course & Section**: _(fill in)_
 - **GitHub username**: arjaygarcia-star
 - **Repository**: https://github.com/arjaygarcia-star/filipino-cookbook-api-garcia
-- **Date completed**: _(08/25/26)_
+- **Date completed**: _(fill in)_
